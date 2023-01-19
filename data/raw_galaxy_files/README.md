@@ -1,3 +1,1 @@
-Place any .tsv files containing workflow connections in the format of [Kumar et al. (2021)](https://doi.org/10.1093/gigascience/giaa152), which will become the "EuGalaxy" dataset.
-
-For evaluation we use [workflow-connection-20-04.tsv](https://github.com/anuprulez/galaxy_tool_recommendation/blob/master/data/worflow-connection-20-04.tsv) downloaded from [their public GitHub repository](https://github.com/anuprulez/galaxy_tool_recommendation).
+Emplace any .ga files from Galaxy workflows here. This directory will be automatically populated by download script for AllGalaxy.
