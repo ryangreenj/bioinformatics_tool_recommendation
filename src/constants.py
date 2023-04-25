@@ -10,6 +10,8 @@ WORKFLOW_SOURCES = os.path.join(DATA_LOC, "workflow_sources.txt")
 TOOL_SOURCES = os.path.join(DATA_LOC, "tool_sources.txt")
 RAW_GALAXY_FILES = os.path.join(DATA_LOC, "raw_galaxy_files")
 TSV_FILES = os.path.join(DATA_LOC, "tsv_files")
+BIOTOOLS_FILES = os.path.join(DATA_LOC, "biotools_data")
+EDAM_ONTOLOGY_CSV = os.path.join(DATA_LOC, "EDAM_1.25.csv")
 
 # Processed data locations
 PROCESSED_WORKFLOWS_LOC = os.path.join(OUT_LOC, "processed_workflows")
@@ -17,7 +19,10 @@ PROCESSED_WORKFLOWS_LOC = os.path.join(OUT_LOC, "processed_workflows")
 TOOLBOX_LOC = os.path.join(OUT_LOC, "toolbox")
 PROCESSED_REPOSITORIES = os.path.join(TOOLBOX_LOC, "processed_repositories.json")
 TOOL_LIST = os.path.join(TOOLBOX_LOC, "tool_list.json")
+TOOL_LIST_BIOTOOLS = os.path.join(TOOLBOX_LOC, "tool_list_biotools.json")
+EDAM_ONTOLOGY_PROCESSED = os.path.join(TOOLBOX_LOC, "edam_ontology_processed.json")
 DESCRIPTION_EMBEDDINGS = os.path.join(TOOLBOX_LOC, "description_embeddings.npy")
+DESCRIPTION_EMBEDDINGS_BIOTOOLS = os.path.join(TOOLBOX_LOC, "description_embeddings_biotools.npy")
 
 # Download options
 GALAXY_API_WAIT = 5

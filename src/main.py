@@ -19,6 +19,7 @@ import download_galaxy.prepare
 import toolbox.download_repositories
 import toolbox.process_toolbox
 import toolbox.embed_descriptions
+import toolbox.process_biotools
 
 def download_workflow_data():
     ### DOWNLOAD AND PROCESS WORKFLOW DATA
@@ -31,6 +32,8 @@ def download_toolbox_data():
     toolbox.download_repositories.run()
     toolbox.process_toolbox.create_tool_list()
     toolbox.embed_descriptions.run()
+    toolbox.embed_descriptions.embed_biotools()
+    toolbox.process_biotools.process()
 
 def prepare_data_splits(model_base_loc, optimize_base_loc):
     ### PREPARE DATA AND SPLITS

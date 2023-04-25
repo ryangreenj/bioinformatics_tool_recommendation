@@ -119,6 +119,7 @@ def get_all_dag_paths(G):
     return paths
 
 def build_workflow_paths_sequence(workflow_dict):
+    # TODO: EDAM data not currently supported for path
     G = workflow_dict["graph"]
     paths = get_all_dag_paths(G)
     path_sequences = []
@@ -187,7 +188,7 @@ def prepare(workflows_path, data_output_path):
     # Load workflows and toolbox
     print("Preparing data for models...")
     workflows = utils.load_json(workflows_path)
-    toolbox, embedding_size = utils.load_toolbox()
+    toolbox, embedding_size = utils.load_toolbox(include_embeddings=True, include_edam=True, edam_embeddings=True)
     
     # Filter workflows and build tool list
     print("Length of workflows before filtering: {}".format(len(workflows)))
