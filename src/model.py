@@ -39,7 +39,7 @@ class GatedGNN(torch.nn.Module):
         if config["model_type"] == "graph":
             self.num_tools += 1 # Add one for the masked node
         
-        self.combined_channels = self.hidden_channels + config["description_size"]
+        self.combined_channels = self.hidden_channels
         
         self.embedding = torch.nn.Embedding(self.num_tools, self.hidden_channels)
         
@@ -51,7 +51,6 @@ class GatedGNN(torch.nn.Module):
         self.q = torch.nn.Linear(self.combined_channels, self.combined_channels, bias=True)
         
         self.linear_transform = torch.nn.Linear(self.combined_channels * 2, self.combined_channels, bias=False)
-        self.compress = torch.nn.Linear(self.combined_channels, self.hidden_channels, bias=False)
     
     def forward(self, data):
         x, edge_index, batch = data.x, data.edge_index, data.batch
@@ -65,7 +64,6 @@ class GatedGNN(torch.nn.Module):
         
         w = torch.cat([w_l, w_g], dim=1)
         w = self.linear_transform(w)
-        w = self.compress(w)
         
         logits = torch.matmul(self.embedding.weight, w.T).T
         return logits
@@ -73,7 +71,6 @@ class GatedGNN(torch.nn.Module):
     def get_embedding(self, x):
         emb = self.embedding(x[:,0].long())
         emb = torch.nn.functional.dropout2d(emb.permute(1, 0), p=self.emb_dropout, training=self.training).permute(1, 0)
-        emb = torch.cat([emb, x[:,1:]], dim=1)
         return emb
     
     def get_workflow_reps(self, h, batch):
