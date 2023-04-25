@@ -10,13 +10,8 @@ from src import utils
 from src import prepare_data
 from src import data_loader
 from src import optimize_hyper
-
-if (constants.MODEL_VARIANT == "no_nlp"):
-    from src import model_no_nlp as model
-elif (constants.MODEL_VARIANT == "no_attn"):
-    from src import model_no_attn as model
-else:
-    from src import model as model
+from src import model
+from src import get_recommendation
 
 import download_galaxy.download
 import download_galaxy.prepare
@@ -39,8 +34,8 @@ def download_toolbox_data():
 
 def prepare_data_splits(model_base_loc, optimize_base_loc):
     ### PREPARE DATA AND SPLITS
-    prepare_data.prepare(os.path.join(constants.PROCESSED_WORKFLOWS_LOC, "all_galaxy.json"), model_base_loc)
-    prepare_data.prepare(os.path.join(constants.PROCESSED_WORKFLOWS_LOC, "all_galaxy.json"), optimize_base_loc)
+    prepare_data.prepare(os.path.join(constants.PROCESSED_WORKFLOWS_LOC, "{}.json".format(constants.MODEL_DATA)), model_base_loc)
+    prepare_data.prepare(os.path.join(constants.PROCESSED_WORKFLOWS_LOC, "{}.json".format(constants.MODEL_DATA)), optimize_base_loc)
 
 def optimize_hyperparameters(base_config):
     ## OPTIMIZE HYPERPARAMETERS OVER 10 ITERATIONS
@@ -108,7 +103,7 @@ def main():
     
     base_config = {
         "device": "cuda",
-        "model_type": "graph",
+        "model_type": constants.MODEL_TYPE,
         "hidden_channels": 32,
         "learning_rate": 0.001,
         "l2_penalty": 0.00001,
@@ -145,12 +140,22 @@ def main():
         test_model(base_config, model_base_loc, optimize_base_loc)
         return
     
+    if (sys.argv[1] == "get_rec"):
+        if (len(sys.argv) < 3):
+            print("Please provide a space-separated list of tools as input")
+            return
+        
+        input_sequence = sys.argv[2:]
+        get_recommendation(base_config, model_base_loc, optimize_base_loc, input_sequence)
+        return
+    
     print ("Invalid argument. Please use one of the following:")
     print("download - Download and process workflow and toolbox data")
     print("prepare - Prepare data splits for training and testing the model based on the specified options")
     print("optimize - Optimize hyperparameters over {} iterations".format(constants.NUM_OPTIMIZE_ITERATIONS))
     print("train - Train a model using the optimized hyperparameters and specified options")
     print("test - Test a previously trained model")
+    print("get_rec - Get recommendations for a given workflow, provide the input as a space-separated list of tools")
 
 if __name__ == "__main__":
     main()

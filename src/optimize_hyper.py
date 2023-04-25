@@ -5,13 +5,7 @@ import os
 from src import utils
 from src import data_loader
 from src import constants
-
-if (constants.MODEL_VARIANT == "no_nlp"):
-    from src import model_no_nlp as model
-elif (constants.MODEL_VARIANT == "no_attn"):
-    from src import model_no_attn as model
-else:
-    from src import model as model
+from src import model
 
 i = 0
 

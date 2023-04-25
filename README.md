@@ -33,26 +33,35 @@ To download and process AllGalaxy data and EuGalaxy data (if applicable), along 
 
 This will take some time depending on the number of seconds to wait between API calls specified in `./src/constants.py` (Default 5 seconds).
 
-## Training and Evaluating the model
-The code is by default configured to optimize and train an instance of BTR^g^~NLP+ATTN~ on the AllGalaxy dataset. This can be configured in `./src/constants.py`
+## Training and evaluating the model
+The code is by default configured to optimize and train an instance of BTR^g^~NLP+ATTN~ on the AllGalaxy dataset. This can be configured in `./src/constants.py`. See branches for model variants.
 
 Create the data splits for the model to use:
 
     python ./src/main.py prepare
 
-Optimize hyperparameters for the model to use over 10 (default, configurable in ./src/constants.py) iterations:
+Optimize hyperparameters for the model to use over 10 iterations (default, configurable in ./src/constants.py):
 
     python ./src/main.py optimize
 
-Train one model using the optimized parameters:
+Train one model using the optimized parameters over the train set:
 
     python ./src/main.py train
 
-Finally, evaluate the model and display the automatic evaluation metrics with:
+Finally, evaluate the model over the full test set and display the automatic evaluation metrics with:
 
     python ./src/main.py test
 
-## Future Enhancements
-This repository will be enhanced to support an interactive command-line method for obtaining recommendations from a trained model.
+## Receiving recommendations for sequence/path model
+Once a model has been trained it can be used for on-demand tool recommendation by providing the previous tools in the current sequence. Input tools are given after the command via a space-separated list. Note that the model requires all input tool names to be valid (in the training toolbox). If a tool is invalid, the system will interactively try to resolve by providing candidate tool matches. Recommendation options can be configured in `./src/constants.py`.
 
-Ideally, most options can be converted to command-line arguments rather than constants.py file.
+    python ./src/main.py get_rec [Input Tool Sequence]
+
+## Receiving recommendations for graph model
+TBA
+
+## References While Preparing Code
+* https://colab.research.google.com/drive/1XwQ0njqSZL8vbHJMnRRHlH4ar0kYYFVz?usp=sharing
+* https://github.com/CRIPAC-DIG/SR-GNN
+* https://pytorch-geometric.readthedocs.io/en/latest/
+* https://github.com/anuprulez/galaxy_tool_recommendation
