@@ -46,10 +46,6 @@ class GatedGNN(torch.nn.Module):
         self.graph = GatedGraphConv(self.combined_channels, self.combined_channels)
         self.dropout_one = torch.nn.Dropout(self.dropout)
         
-        self.linear_one = torch.nn.Linear(self.combined_channels, self.combined_channels, bias=False)
-        self.linear_two = torch.nn.Linear(self.combined_channels, self.combined_channels, bias=True)
-        self.q = torch.nn.Linear(self.combined_channels, self.combined_channels, bias=True)
-        
         self.linear_transform = torch.nn.Linear(self.combined_channels * 2, self.combined_channels, bias=False)
         self.compress = torch.nn.Linear(self.combined_channels, self.hidden_channels, bias=False)
     
@@ -83,17 +79,8 @@ class GatedGNN(torch.nn.Module):
         # Stack last elements of each batch
         w_l = torch.stack([h_split[i][-1] for i in range(len(h_split))])
         
-        # Stack last elements of each batch to match size of the current split
-        w_g_r = torch.cat([h_split[i][-1].repeat(len(h_split[i]), 1) for i in range(len(h_split))])
-        
-        q1 = self.linear_one(w_g_r)
-        q2 = self.linear_two(h)
-        alpha = self.q(torch.sigmoid(q1 + q2))
-        a = alpha * h
-        
-        # Split and sum by batch
-        a_split = torch.split(a, split_sections, dim=0)
-        w_g = torch.stack([torch.sum(a_split[i], dim=0) for i in range(len(a_split))])
+        # Mean pooling for global representation
+        w_g = torch.stack([torch.mean(h_split[i], dim=0) for i in range(len(h_split))])
         
         return w_l, w_g
     
