@@ -81,17 +81,23 @@ def get_node_id(node):
 def get_node_type(node):
     return node["type"]
 
-def load_toolbox():
+def load_toolbox(include_embeddings=True, include_edam=False):
     # Construct toolbox from json file and associate embeddings
-    toolbox = load_json(constants.TOOL_LIST)
-    tool_embeddings = load_numpy(constants.DESCRIPTION_EMBEDDINGS)
-    embedding_size = tool_embeddings.shape[1]
+    if include_edam:
+        toolbox = load_json(constants.TOOL_LIST_BIOTOOLS)
+    else:
+        toolbox = load_json(constants.TOOL_LIST)
+    if include_embeddings:
+        tool_embeddings = load_numpy(constants.DESCRIPTION_EMBEDDINGS)
+        embedding_size = tool_embeddings.shape[1]
     
-    if (len(toolbox) != len(tool_embeddings)):
-        raise Exception("Toolbox and embeddings have different lengths. Please process the toolbox first.")
-    
-    # Map embeddings to tools
-    for i, tool in enumerate(toolbox):
-        toolbox[tool]["embedding"] = tool_embeddings[i]
-    
-    return toolbox, embedding_size
+        if (len(toolbox) != len(tool_embeddings)):
+            raise Exception("Toolbox and embeddings have different lengths. Please process the toolbox first.")
+        
+        # Map embeddings to tools
+        for i, tool in enumerate(toolbox):
+            toolbox[tool]["embedding"] = tool_embeddings[i]
+        
+        return toolbox, embedding_size
+    else:
+        return toolbox

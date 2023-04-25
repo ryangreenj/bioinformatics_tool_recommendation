@@ -19,6 +19,7 @@ import download_galaxy.prepare
 import toolbox.download_repositories
 import toolbox.process_toolbox
 import toolbox.embed_descriptions
+import toolbox.process_biotools
 
 def download_workflow_data():
     ### DOWNLOAD AND PROCESS WORKFLOW DATA
@@ -31,6 +32,7 @@ def download_toolbox_data():
     toolbox.download_repositories.run()
     toolbox.process_toolbox.create_tool_list()
     toolbox.embed_descriptions.run()
+    toolbox.process_biotools.process()
 
 def prepare_data_splits(model_base_loc, optimize_base_loc):
     ### PREPARE DATA AND SPLITS
@@ -48,6 +50,10 @@ def optimize_hyperparameters(base_config):
         "dropout": [0.0, 0.5],
         "batch_size": [32, 128],
         "epochs": [50, 100],
+        "topic_channels": [16, 64],
+        "data_channels": [16, 64],
+        "format_channels": [16, 64],
+        "operation_channels": [16, 64]
     }
     
     num_evals = constants.NUM_OPTIMIZE_ITERATIONS
@@ -66,6 +72,10 @@ def train_model(base_config, model_base_loc, optimize_base_loc):
     config["batch_size"] = int(config["batch_size"])
     config["epochs"] = int(config["epochs"])
     config["model_path"] = model_base_loc
+    config["topic_channels"] = int(config["topic_channels"])
+    config["data_channels"] = int(config["data_channels"])
+    config["format_channels"] = int(config["format_channels"])
+    config["operation_channels"] = int(config["operation_channels"])
     config = data_loader.add_data_config(config)
     
     best_model, best_epoch, best_acc, val_accs, losses = model.train_model(config)
@@ -85,6 +95,10 @@ def test_model(base_config, model_base_loc, optimize_base_loc):
     config["batch_size"] = int(config["batch_size"])
     config["epochs"] = int(config["epochs"])
     config["model_path"] = model_base_loc
+    config["topic_channels"] = int(config["topic_channels"])
+    config["data_channels"] = int(config["data_channels"])
+    config["format_channels"] = int(config["format_channels"])
+    config["operation_channels"] = int(config["operation_channels"])
     config = data_loader.add_data_config(config)
     
     if config["model_type"] == "graph":
@@ -117,6 +131,10 @@ def main():
         "model_name": "model.pt",
         "top_k": constants.HITRATE_K,
         "mrr_k": constants.MRR_K,
+        "topic_channels": 32,
+        "data_channels": 32,
+        "format_channels": 32,
+        "operation_channels": 32
     }
     
     if (sys.argv[1] == "download"):

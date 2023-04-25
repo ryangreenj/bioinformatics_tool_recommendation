@@ -21,6 +21,10 @@ def optimize(config, ranges, num_evals, output_name="best_hyperparameters.json")
     params["dropout"] = hyperopt.hp.uniform("dropout", ranges["dropout"][0], ranges["dropout"][1])
     params["batch_size"] = hyperopt.hp.quniform("batch_size", ranges["batch_size"][0], ranges["batch_size"][1], 1)
     params["epochs"] = hyperopt.hp.quniform("epochs", ranges["epochs"][0], ranges["epochs"][1], 1)
+    params["topic_channels"] = hyperopt.hp.quniform("topic_channels", ranges["topic_channels"][0], ranges["topic_channels"][1], 1)
+    params["data_channels"] = hyperopt.hp.quniform("data_channels", ranges["data_channels"][0], ranges["data_channels"][1], 1)
+    params["format_channels"] = hyperopt.hp.quniform("format_channels", ranges["format_channels"][0], ranges["format_channels"][1], 1)
+    params["operation_channels"] = hyperopt.hp.quniform("operation_channels", ranges["operation_channels"][0], ranges["operation_channels"][1], 1)
     
     def objective(params):
         global i
@@ -32,6 +36,10 @@ def optimize(config, ranges, num_evals, output_name="best_hyperparameters.json")
         model_config["step_size"] = int(model_config["step_size"])
         model_config["batch_size"] = int(model_config["batch_size"])
         model_config["epochs"] = int(model_config["epochs"])
+        model_config["topic_channels"] = int(model_config["topic_channels"])
+        model_config["data_channels"] = int(model_config["data_channels"])
+        model_config["format_channels"] = int(model_config["format_channels"])
+        model_config["operation_channels"] = int(model_config["operation_channels"])
         
         print("Hyperparameter Optimize Iteration: {}".format(i))
         print("Hyperparameters: {}".format(model_config))

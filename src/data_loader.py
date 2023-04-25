@@ -6,6 +6,7 @@ import pandas as pd
 import os
 
 from src import utils
+from src import constants
 
 class GraphDataset(torch_geometric.data.InMemoryDataset):
     def __init__(self, root, name, transform=None, pre_transform=None):
@@ -26,6 +27,12 @@ class GraphDataset(torch_geometric.data.InMemoryDataset):
 
     def process(self):
         info = utils.load_json(os.path.join(self.root, "info.json"))
+        edam_ont_annots = utils.load_json(constants.EDAM_ONTOLOGY_PROCESSED)
+
+        topic_size = len(edam_ont_annots["topic"])
+        data_size = len(edam_ont_annots["data"])
+        format_size = len(edam_ont_annots["format"])
+        operation_size = len(edam_ont_annots["operation"])
         
         data_file = f"{self.raw_dir}/{self.raw_file_names[0]}"
         
@@ -51,6 +58,28 @@ class GraphDataset(torch_geometric.data.InMemoryDataset):
                     node = G.nodes[node_id]
                     tool_id_to_graph_id[node["tool_id"]] = next_id
                     node_features = [node["tool_id"]]
+                    
+                    # EDAM ontology vectors
+                    topic_vec = np.zeros(topic_size)
+                    for topic in node["topic"]:
+                        topic_vec[topic] = 1
+                    node_features.extend(topic_vec)
+
+                    data_vec = np.zeros(data_size)
+                    for data in node["data"]:
+                        data_vec[data] = 1
+                    node_features.extend(data_vec)
+
+                    format_vec = np.zeros(format_size)
+                    for format in node["format"]:
+                        format_vec[format] = 1
+                    node_features.extend(format_vec)
+
+                    operation_vec = np.zeros(operation_size)
+                    for operation in node["operation"]:
+                        operation_vec[operation] = 1
+                    node_features.extend(operation_vec)
+                    
                     node_features.extend(node["embedding"])
                     x.append(node_features)
                     
@@ -66,7 +95,7 @@ class GraphDataset(torch_geometric.data.InMemoryDataset):
                 
                 # Masked node receives a dummy feature vector
                 x_masked = [info["num_tools"]]
-                x_masked.extend(np.zeros(info["embedding_size"]))
+                x_masked.extend(np.zeros(info["embedding_size"] + topic_size + data_size + format_size + operation_size))
                 x.append(x_masked)
                 
                 # Add edges from last nodes to masked node

@@ -46,7 +46,7 @@ def flatten_to_type(tool_name_to_id, tool_id_to_type, types=["tool"]):
     
     return tool_name_to_id_flattened, tool_id_to_type_flattened
 
-def build_workflow_dag(workflow, tool_name_to_id, toolbox, types=["tool"]):
+def build_workflow_dag(workflow, tool_name_to_id, toolbox, edam_ont_annots, types=["tool"]):
     G = nx.DiGraph()
     
     # Map nodes with tool IDs and description embeddings
@@ -58,7 +58,29 @@ def build_workflow_dag(workflow, tool_name_to_id, toolbox, types=["tool"]):
             continue
         
         tool_name = utils.get_node_id(node)
-        G.add_node(node_index, tool_id=tool_name_to_id[tool_name], tool_type=tool_type, embedding=toolbox[tool_name]["embedding"])
+        
+        topic = []
+        data = []
+        format = []
+        operation = []
+
+        if ("biotools_topics" in toolbox[tool_name]):
+            for t in toolbox[tool_name]["biotools_topics"]:
+                topic.append(edam_ont_annots["topic"][t]["id"])
+
+        if ("biotools_data" in toolbox[tool_name]):
+            for d in toolbox[tool_name]["biotools_data"]:
+                data.append(edam_ont_annots["data"][d]["id"])
+
+        if ("biotools_format" in toolbox[tool_name]):
+            for f in toolbox[tool_name]["biotools_format"]:
+                format.append(edam_ont_annots["format"][f]["id"])
+
+        if ("biotools_operation" in toolbox[tool_name]):
+            for op in toolbox[tool_name]["biotools_operation"]:
+                operation.append(edam_ont_annots["operation"][op]["id"])
+
+        G.add_node(node_index, tool_id=tool_name_to_id[tool_name], tool_type=tool_type, embedding=toolbox[tool_name]["embedding"], topic=topic, data=data, format=format, operation=operation)        
         node_index += 1
     
     # Map edges between nodes
@@ -85,8 +107,10 @@ def build_unique_workflow_dags(workflows, tool_name_to_id, toolbox, types=["tool
     graph_hashes = []
     unique_graph_dicts = []
     
+    edam_ont_annots = utils.load_json(constants.EDAM_ONTOLOGY_PROCESSED)
+    
     for workflow in tqdm.tqdm(workflows, desc="Building workflow DAGs"):
-        G = build_workflow_dag(workflow, tool_name_to_id, toolbox, types)
+        G = build_workflow_dag(workflow, tool_name_to_id, toolbox, edam_ont_annots, types)
         graph_hash = nx.weisfeiler_lehman_graph_hash(G, node_attr="tool_id") # Strong guarantee of uniqueness between non-isomorphic graphs
         
         # Only keep unique graphs
@@ -119,6 +143,7 @@ def get_all_dag_paths(G):
     return paths
 
 def build_workflow_paths_sequence(workflow_dict):
+    # TODO: EDAM data not currently supported for path
     G = workflow_dict["graph"]
     paths = get_all_dag_paths(G)
     path_sequences = []
@@ -187,7 +212,7 @@ def prepare(workflows_path, data_output_path):
     # Load workflows and toolbox
     print("Preparing data for models...")
     workflows = utils.load_json(workflows_path)
-    toolbox, embedding_size = utils.load_toolbox()
+    toolbox, embedding_size = utils.load_toolbox(include_embeddings=True, include_edam=True)
     
     # Filter workflows and build tool list
     print("Length of workflows before filtering: {}".format(len(workflows)))

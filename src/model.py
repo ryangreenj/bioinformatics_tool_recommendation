@@ -32,16 +32,32 @@ class GatedGNN(torch.nn.Module):
     def __init__(self, config):
         super(GatedGNN, self).__init__()
         self.hidden_channels = config["hidden_channels"]
+        self.topic_channels = config["topic_channels"]
+        self.data_channels = config["data_channels"]
+        self.format_channels = config["format_channels"]
+        self.operation_channels = config["operation_channels"]
         self.num_tools = config["num_tools"]
         self.emb_dropout = config["emb_dropout"]
         self.dropout = config["dropout"]
         
+        edam_ont_annots = utils.load_json(constants.EDAM_ONTOLOGY_PROCESSED)
+
+        self.topic_size = len(edam_ont_annots["topic"])
+        self.data_size = len(edam_ont_annots["data"])
+        self.format_size = len(edam_ont_annots["format"])
+        self.operation_size = len(edam_ont_annots["operation"])
+        
         if config["model_type"] == "graph":
             self.num_tools += 1 # Add one for the masked node
         
-        self.combined_channels = self.hidden_channels + config["description_size"]
+        self.combined_channels = self.hidden_channels + self.topic_channels + self.data_channels + self.format_channels + self.operation_channels + config["description_size"]
         
         self.embedding = torch.nn.Embedding(self.num_tools, self.hidden_channels)
+        
+        self.topic_embedding = torch.nn.EmbeddingBag(self.topic_size, self.topic_channels, mode="sum")
+        self.data_embedding = torch.nn.EmbeddingBag(self.data_size, self.data_channels, mode="sum")
+        self.format_embedding = torch.nn.EmbeddingBag(self.format_size, self.format_channels, mode="sum")
+        self.operation_embedding = torch.nn.EmbeddingBag(self.operation_size, self.operation_channels, mode="sum")
         
         self.graph = GatedGraphConv(self.combined_channels, self.combined_channels)
         self.dropout_one = torch.nn.Dropout(self.dropout)
@@ -70,10 +86,32 @@ class GatedGNN(torch.nn.Module):
         logits = torch.matmul(self.embedding.weight, w.T).T
         return logits
     
+    def embed_edam_feature(self, x, offset, size, embeddingBag):
+        nonzeros = torch.nonzero(x[:,offset:offset+size]).T
+        features = nonzeros[1]
+        offset += size
+
+        bagOffsets = torch.zeros(x.shape[0], dtype=torch.long, device=x.device)
+        for i in range(x.shape[0] - 1):
+            bagOffsets[i + 1] = torch.sum(nonzeros[0] == i)
+        bagOffsets = torch.cumsum(bagOffsets, dim=0)
+
+        emb = embeddingBag(features, bagOffsets)
+        return emb, offset
+    
     def get_embedding(self, x):
         emb = self.embedding(x[:,0].long())
         emb = torch.nn.functional.dropout2d(emb.permute(1, 0), p=self.emb_dropout, training=self.training).permute(1, 0)
-        emb = torch.cat([emb, x[:,1:]], dim=1)
+        
+        offset = 1
+
+        topicEmb, offset = self.embed_edam_feature(x, offset, self.topic_size, self.topic_embedding)
+        dataEmb, offset = self.embed_edam_feature(x, offset, self.data_size, self.data_embedding)        
+        formatEmb, offset = self.embed_edam_feature(x, offset, self.format_size, self.format_embedding)
+        operationEmb, offset = self.embed_edam_feature(x, offset, self.operation_size, self.operation_embedding)
+
+        emb = torch.cat([emb, topicEmb, dataEmb, formatEmb, operationEmb, x[:,offset:]], dim=1)
+        
         return emb
     
     def get_workflow_reps(self, h, batch):
